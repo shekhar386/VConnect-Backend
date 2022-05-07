@@ -34,5 +34,21 @@ export default class CtrlPost {
             },
         ]);
     }
+
+    /**
+     * like post
+     * @param userData
+     */
+    static async likePost(userId, postId): Promise<IPost[]> {
+        return post.findOneAndUpdate({_id: postId}, {$push: {likes: userId}}, {new: true})
+    }
+
+    /**
+     * unlike post
+     * @param userData
+     */
+    static async unlikePost(userId, postId): Promise<IPost[]> {
+        return post.findOneAndUpdate({_id: postId}, {$pull: {likes: userId}}, {new: true})
+    }
 }
 

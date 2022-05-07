@@ -160,6 +160,7 @@ export default class Server {
             //@ts-ignore
             return CtrlPost.create({...data, uid: req.session.user.uid});
         }));
+
         /**
          * User's post
          * only by user
@@ -168,6 +169,36 @@ export default class Server {
             //return and call controller
             //@ts-ignore
             return CtrlPost.findUserPost(req.session.user.uid);
+        }));
+
+        /**
+         * like post
+         */
+        this.app.put("/post/like", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                postId: Joi.string().required(), //ID of post
+            });
+            //validate joi schema
+            await schema.validateAsync(req.body);
+            //calling controller
+            //@ts-ignore
+            return CtrlPost.likePost(req.session.user.uid, req.body.postId);
+        }));
+
+        /**
+         * unlike post
+         */
+        this.app.put("/post/unlike", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                postId: Joi.string().required(), //ID of post
+            });
+            //validate joi schema
+            await schema.validateAsync(req.body);
+            //calling controller
+            //@ts-ignore
+            return CtrlPost.unlikePost(req.session.user.uid, req.body.postId);
         }));
     }
 }

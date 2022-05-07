@@ -15,6 +15,7 @@ export interface IPost {
     public: boolean,
     weight: string,
     style: string,
+    mediaType: string,
 }
 
 //Creating schema for user
@@ -36,6 +37,7 @@ const postSchema=new Schema({
         type: Schema.Types.ObjectId,
         ref: "user",
         default: [],
+        unique: true,
     }],
     nComments: {
         type: Number,
@@ -58,6 +60,9 @@ const postSchema=new Schema({
         type: String,
         required: true,
     },
+    mediaType: {
+        type: String,
+    }
 })
 
 //Exporting the model
