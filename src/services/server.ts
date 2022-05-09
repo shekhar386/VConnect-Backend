@@ -162,6 +162,16 @@ export default class Server {
         }));
 
         /**
+         * All post
+         * only by user
+         */
+        this.app.get("/post/all", expressResponse(async (req: Request) => {
+            //return and call controller
+            //@ts-ignore
+            return CtrlPost.findAllPost();
+        }));
+
+        /**
          * User's post
          * only by user
          */

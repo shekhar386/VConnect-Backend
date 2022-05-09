@@ -18,6 +18,16 @@ export default class CtrlPost {
     }
 
     /**
+     * Return the all posts
+     * @param userData
+     * for profile screen
+     */
+    static async findAllPost(): Promise<IPost[]> {
+        //return all tickets which are not expired
+        return post.find();
+    }
+
+    /**
      * Return the user's posts
      * @param userData
      * for profile screen
