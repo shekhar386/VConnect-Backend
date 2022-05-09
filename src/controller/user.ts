@@ -83,5 +83,25 @@ export default class CtrlUser {
             },
         ]);
     }
+
+    /**
+     * Return the user list
+     * @param searchData
+     * for profile screen
+     */
+    static async findUserList(searchData): Promise<IUser[]> {
+        return user.find({name: {$regex: '^' + searchData + '.*', $options: 'i'}, disabled: false});
+    }
+
+    /**
+     * Send Request
+     */
+    static async sendRequest(currUser, targetUser): Promise<IUser> {
+        return user.findOneAndUpdate(
+            {_id: targetUser},
+            {$push: {friendRequest: new mongoose.Types.ObjectId(currUser)}},
+            {new: true}
+            )
+    }
 }
 

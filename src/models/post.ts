@@ -16,6 +16,7 @@ export interface IPost {
     weight: string,
     style: string,
     mediaType: string,
+    dateAdded: string,
 }
 
 //Creating schema for user
@@ -61,6 +62,9 @@ const postSchema=new Schema({
         required: true,
     },
     mediaType: {
+        type: String,
+    },
+    dateAdded: {
         type: String,
     }
 })

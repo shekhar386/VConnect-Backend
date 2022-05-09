@@ -22,9 +22,42 @@ export default class CtrlPost {
      * @param userData
      * for profile screen
      */
-    static async findAllPost(): Promise<IPost[]> {
+    static async findAllPost(userId): Promise<IPost[]> {
         //return all tickets which are not expired
-        return post.find();
+        const postData =  post.aggregate([
+            {
+                $match: {
+                    uid: {$ne: new mongoose.Types.ObjectId(userId)}
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "uid",
+                    foreignField: "_id",
+                    as: "user",
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $match: {
+                    $expr: {
+                        $and: [
+                            {$eq: ["$user.disabled", false]},
+                            {$or: [{$eq: ["$public", true]}, {$in: ["$uid", "$user.friendList"]}]}
+                        ]
+                    }
+                }
+            },
+            {
+                $sort: {
+                    dateAdded: -1,
+                }
+            }
+        ]).exec();
+        return postData;
     }
 
     /**
@@ -42,7 +75,54 @@ export default class CtrlPost {
                     uid: new mongoose.Types.ObjectId(userData),
                 }
             },
+            {
+                $sort: {
+                    dateAdded: -1,
+                }
+            }
         ]);
+    }
+
+    /**
+     * Return the user's posts
+     * @param userData
+     * for profile screen
+     */
+    static async findOtherUserPost(userData): Promise<IPost[]> {
+        console.log(userData);
+        const postData =  post.aggregate([
+            {
+                $match: {
+                    uid: new mongoose.Types.ObjectId(userData),
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "uid",
+                    foreignField: "_id",
+                    as: "user",
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $match: {
+                    $expr: {
+                        $and: [
+                            {$or: [{$eq: ["$public", true]}, {$in: ["$uid", "$user.friendList"]}]}
+                        ]
+                    }
+                }
+            },
+            {
+                $sort: {
+                    dateAdded: -1,
+                }
+            }
+        ]).exec();
+        return postData;
     }
 
     /**

@@ -11,6 +11,7 @@ import expressResponse from "../middleware/expressResponse";
 import CtrlUser from "../controller/user";
 import CtrlPost from "../controller/post";
 import cors from 'cors';
+import Time from '../utils/time'
 
 /**
  * Main server class
@@ -153,6 +154,7 @@ export default class Server {
                 weight: Joi.string().default('normal'),
                 style: Joi.string().default('normal'),
                 mediaType: Joi.string().default(''),
+                dateAdded: Joi.string().default(Time.current()),
             });
             //validate joi schema
             const data = await schema.validateAsync(req.body);
@@ -166,9 +168,9 @@ export default class Server {
          * only by user
          */
         this.app.get("/post/all", expressResponse(async (req: Request) => {
-            //return and call controller
+            //return and call controller\
             //@ts-ignore
-            return CtrlPost.findAllPost();
+            return CtrlPost.findAllPost(req.session.user.uid);
         }));
 
         /**
@@ -179,6 +181,22 @@ export default class Server {
             //return and call controller
             //@ts-ignore
             return CtrlPost.findUserPost(req.session.user.uid);
+        }));
+
+        /**
+         * User's post
+         * other
+         */
+        this.app.get("/post/other", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                uid: Joi.string().required(), //id of user
+            });
+            //validate joi schema
+            await schema.validateAsync(req.query);
+            //return and call controller
+            //@ts-ignore
+            return CtrlPost.findOtherUserPost(req.query.uid);
         }));
 
         /**
@@ -209,6 +227,54 @@ export default class Server {
             //calling controller
             //@ts-ignore
             return CtrlPost.unlikePost(req.session.user.uid, req.body.postId);
+        }));
+
+        /**
+         * User list
+         * only by user
+         */
+        this.app.get("/user/search", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                searchData: Joi.string(),
+            });
+            //validate joi schema
+            await schema.validateAsync(req.query);
+            //return and call controller
+            //@ts-ignore
+            return CtrlUser.findUserList(req.query.searchData);
+        }));
+
+        /**
+         * Other User's profile
+         * only by user
+         */
+        this.app.get("/user/other", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                email: Joi.string().required(), //email of user
+            });
+            //validate joi schema
+            await schema.validateAsync(req.query);
+            //return and call controller
+            //@ts-ignore
+            return CtrlUser.profile(req.query.email);
+        }));
+
+        /**
+         * Send Request
+         * only by user
+         */
+        this.app.put("/user/request", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                targetId: Joi.string().required(), //id of target user
+            });
+            //validate joi schema
+            await schema.validateAsync(req.body);
+            //return and call controller
+            //@ts-ignore
+            return CtrlUser.sendRequest(req.session.user.uid, req.body.targetId);
         }));
     }
 }
