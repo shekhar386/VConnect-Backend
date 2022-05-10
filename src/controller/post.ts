@@ -46,7 +46,7 @@ export default class CtrlPost {
                     $expr: {
                         $and: [
                             {$eq: ["$user.disabled", false]},
-                            {$or: [{$eq: ["$public", true]}, {$in: ["$uid", "$user.friendList"]}]}
+                            {$or: [{$eq: ["$public", true]}, {$in: [userId, "$user.friendList"]}]}
                         ]
                     }
                 }
@@ -88,7 +88,7 @@ export default class CtrlPost {
      * @param userData
      * for profile screen
      */
-    static async findOtherUserPost(userData): Promise<IPost[]> {
+    static async findOtherUserPost(userData, currUserData): Promise<IPost[]> {
         console.log(userData);
         const postData =  post.aggregate([
             {
@@ -111,7 +111,7 @@ export default class CtrlPost {
                 $match: {
                     $expr: {
                         $and: [
-                            {$or: [{$eq: ["$public", true]}, {$in: ["$uid", "$user.friendList"]}]}
+                            {$or: [{$eq: ["$public", true]}, {$in: [ currUserData, "$user.friendList"]}]}
                         ]
                     }
                 }
@@ -129,8 +129,15 @@ export default class CtrlPost {
      * like post
      * @param userData
      */
-    static async likePost(userId, postId): Promise<IPost[]> {
-        return post.findOneAndUpdate({_id: postId}, {$push: {likes: userId}}, {new: true})
+    static async likePost(userId, postId): Promise<any> {
+        const postData = await post.findOneAndUpdate(
+            {_id: postId},
+            {$push: {likes: userId}},
+            {new: true}
+        );
+        const userData = await user.findOne({_id: userId})
+        await user.findOneAndUpdate({_id: postData.uid}, {$push: {notification: {uName: userData.name, type: 1}}});
+        return postData;
     }
 
     /**
@@ -138,7 +145,7 @@ export default class CtrlPost {
      * @param userData
      */
     static async unlikePost(userId, postId): Promise<IPost[]> {
-        return post.findOneAndUpdate({_id: postId}, {$pull: {likes: userId}}, {new: true})
+        return post.findOneAndUpdate({_id: postId}, {$pull: {likes: userId}}, {new: true});
     }
 }
 

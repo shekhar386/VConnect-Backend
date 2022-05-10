@@ -13,7 +13,7 @@ export interface IUser {
     country: string,
     friendList: string[],
     friendRequest: string[],
-    notification: string[],
+    notification: object[],
     disabled: boolean,
     profilePic: string,
     bio: string,
@@ -26,6 +26,7 @@ const userSchema=new Schema({
     name:{
         type:String,
         required:true,
+        unique: true,
     },
     email:{
         type:String,
@@ -49,9 +50,10 @@ const userSchema=new Schema({
     }],
     friendRequest:[{
         type:String,
+        unique: true,
     }],
     notification:[{
-        type:String,
+        type:Object,
     }],
     disabled:{
         type:Boolean,

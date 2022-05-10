@@ -94,6 +94,20 @@ export default class CtrlUser {
     }
 
     /**
+     * Return the user request list
+     * for notification screen
+     * @param userIds
+     */
+    static async findUserRequestList(userIds): Promise<any> {
+        let allUserData = [];
+        for (const user1 of userIds) {
+            let userData = await user.find({_id: new mongoose.Types.ObjectId(user1)})
+            allUserData.push(userData[0]);
+        }
+        return allUserData;
+    }
+
+    /**
      * Send Request
      */
     static async sendRequest(currUser, targetUser): Promise<IUser> {
@@ -102,6 +116,25 @@ export default class CtrlUser {
             {$push: {friendRequest: new mongoose.Types.ObjectId(currUser)}},
             {new: true}
             )
+    }
+
+    /**
+     * Confirm Request
+     */
+    static async confirmRequest(currUser, targetUser): Promise<String> {
+        await user.findOneAndUpdate(
+            {_id: currUser},
+            {$push: {friendList: new mongoose.Types.ObjectId(targetUser)},
+                $pull: {friendRequest: new mongoose.Types.ObjectId(targetUser)}},
+            {new: true}
+        )
+
+        await user.findOneAndUpdate(
+            {_id: targetUser},
+            {$push: {friendList: new mongoose.Types.ObjectId(currUser)}},
+            {new: true}
+        )
+        return "Success";
     }
 }
 

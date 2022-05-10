@@ -196,7 +196,7 @@ export default class Server {
             await schema.validateAsync(req.query);
             //return and call controller
             //@ts-ignore
-            return CtrlPost.findOtherUserPost(req.query.uid);
+            return CtrlPost.findOtherUserPost(req.query.uid, req.session.user.uid);
         }));
 
         /**
@@ -275,6 +275,37 @@ export default class Server {
             //return and call controller
             //@ts-ignore
             return CtrlUser.sendRequest(req.session.user.uid, req.body.targetId);
+        }));
+
+        /**
+         * Confirm Request
+         * only by user
+         */
+        this.app.put("/user/confirm", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                targetId: Joi.string().required(), //id of target user
+            });
+            //validate joi schema
+            await schema.validateAsync(req.body);
+            //return and call controller
+            //@ts-ignore
+            return CtrlUser.confirmRequest(req.session.user.uid, req.body.targetId);
+        }));
+
+        /**
+         * Request User Data
+         */
+        this.app.get("/user/requestUserData", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                userIds: Joi.array().items(Joi.string()).default([]),
+            });
+            //validate joi schema
+            const data = await schema.validateAsync(req.query);
+            //return and call controller
+            //@ts-ignore
+            return CtrlUser.findUserRequestList(data.userIds);
         }));
     }
 }
