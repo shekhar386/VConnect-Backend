@@ -4,6 +4,7 @@
 
 import { Schema, model } from "mongoose";
 import {IUser} from "./user";
+import {boolean} from "joi";
 
 export interface IPost {
     uid: string | IUser,
@@ -17,6 +18,8 @@ export interface IPost {
     style: string,
     mediaType: string,
     dateAdded: string,
+    sharedPost: string | IPost,
+
 }
 
 //Creating schema for user
@@ -28,7 +31,6 @@ const postSchema=new Schema({
     },
     body: {
         type: String,
-        required: true,
     },
     picture: {
         type: String,
@@ -38,7 +40,6 @@ const postSchema=new Schema({
         type: Schema.Types.ObjectId,
         ref: "user",
         default: [],
-        unique: true,
     }],
     nComments: {
         type: Number,
@@ -66,7 +67,10 @@ const postSchema=new Schema({
     },
     dateAdded: {
         type: String,
-    }
+    },
+    sharedPost: {
+        type: Schema.Types.ObjectId,
+    },
 })
 
 //Exporting the model

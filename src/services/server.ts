@@ -155,12 +155,53 @@ export default class Server {
                 style: Joi.string().default('normal'),
                 mediaType: Joi.string().default(''),
                 dateAdded: Joi.string().default(Time.current()),
+                friendRequest: Joi.array().items(Joi.string()).default([]),
+                sharedPost: Joi.string(),
             });
             //validate joi schema
             const data = await schema.validateAsync(req.body);
             //calling controller
             //@ts-ignore
             return CtrlPost.create({...data, uid: req.session.user.uid});
+        }));
+
+        /**
+         * Share a Post
+         * by the user
+         */
+        this.app.post("/post/share", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                body: Joi.string().required(),
+                picture: Joi.string().default(''),
+                public: Joi.boolean().default(false),
+                weight: Joi.string().default('normal'),
+                style: Joi.string().default('normal'),
+                mediaType: Joi.string().default(''),
+                dateAdded: Joi.string().default(Time.current()),
+                sharedPost: Joi.string(),
+            });
+            //validate joi schema
+            const data = await schema.validateAsync(req.body);
+            //calling controller
+            //@ts-ignore
+            return CtrlPost.createSharedPost({...data, uid: req.session.user.uid});
+        }));
+
+        /**
+         * Single post
+         * only by user
+         */
+        this.app.get("/post/single", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                postId: Joi.string().required(),
+            });
+            //validate joi schema
+            await schema.validateAsync(req.query);
+            //return and call controller
+            //@ts-ignore
+            return CtrlPost.findSinglePost(req.query.postId);
         }));
 
         /**

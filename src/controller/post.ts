@@ -11,10 +11,52 @@ export default class CtrlPost {
      * @param body
      */
     static async create(body: any): Promise<IPost> {
-        const userData = await user.findOneAndUpdate({_id: body.uid}, {$inc: {numberOfPosts: 1}}).lean();
-        console.log(body);
-        //create jobSeeker
+        await user.findOneAndUpdate({_id: body.uid}, {$inc: {numberOfPosts: 1}}).lean();
+        //create post
         return post.create(body);
+    }
+
+    /**
+     * Create shared Post
+     * @param body
+     */
+    static async createSharedPost(body: any): Promise<IPost> {
+        await user.findOneAndUpdate({_id: body.uid}, {$inc: {numberOfPosts: 1}}).lean();
+        await post.findOneAndUpdate(
+            {_id: body.sharedPost},
+            {$push: {shares: body.uid}},
+            {new: true}
+        );
+        //share post
+        return post.create(body);
+    }
+
+    /**
+     * Return the single posts
+     * @param userData
+     * for profile screen
+     */
+    static async findSinglePost(postId): Promise<IPost[]> {
+        //return all tickets which are not expired
+        const postData = post.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(postId)
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "uid",
+                    foreignField: "_id",
+                    as: "user",
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+        ]);
+        return postData;
     }
 
     /**
@@ -32,6 +74,24 @@ export default class CtrlPost {
             },
             {
                 $lookup: {
+                    from: "posts",
+                    localField: "sharedPost",
+                    foreignField: "_id",
+                    as: "post",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "uid",
+                                foreignField: "_id",
+                                as: "user",
+                            }
+                        },
+                    ]
+                }
+            },
+            {
+                $lookup: {
                     from: "users",
                     localField: "uid",
                     foreignField: "_id",
@@ -46,7 +106,7 @@ export default class CtrlPost {
                     $expr: {
                         $and: [
                             {$eq: ["$user.disabled", false]},
-                            {$or: [{$eq: ["$public", true]}, {$in: [userId, "$user.friendList"]}]}
+                            {$or: [{$eq: ["$public", true]}, {$in: [userId, "$user.friendList"]}]},
                         ]
                     }
                 }
@@ -73,6 +133,27 @@ export default class CtrlPost {
                 $match: {
                     //@ts-ignore
                     uid: new mongoose.Types.ObjectId(userData),
+                }
+            },
+            {
+                $lookup: {
+                    from: "posts",
+                    localField: "sharedPost",
+                    foreignField: "_id",
+                    as: "post",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "uid",
+                                foreignField: "_id",
+                                as: "user",
+                            }
+                        },
+                        {
+                            $unwind: "$user"
+                        },
+                    ]
                 }
             },
             {
