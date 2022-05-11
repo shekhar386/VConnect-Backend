@@ -74,7 +74,7 @@ export default class Server {
                 country: Joi.string().required(),
                 friendList: Joi.array().items(Joi.string()).default([]),
                 friendRequest: Joi.array().items(Joi.string()).default([]),
-                notification: Joi.array().items(Joi.object()).default([]),
+                notification: Joi.array().items(Joi.string()).default([]),
                 disabled: Joi.boolean().default(false),
                 profilePic: Joi.string().default("https://www.iconsdb.com/icons/preview/violet/add-user-2-xxl.png"),
                 bio: Joi.string().default(""),
@@ -85,27 +85,6 @@ export default class Server {
             //call and return controller
             //@ts-ignore
             return CtrlUser.create(data);
-        }));
-
-        /**
-         * Edit a user
-         */
-        this.app.put("/user/edit", expressResponse(async (req: Request) => {
-            //creating joi schema
-            const schema = Joi.object({
-                name: Joi.string().required(),//user's name
-                email: Joi.string().email().required(),//user email id
-                dob: Joi.string().required(),
-                country: Joi.string().required(),
-                profilePic: Joi.string(),
-                bio: Joi.string(),
-            })
-            //validate the schema
-            // @ts-ignore
-            const data = await schema.validateAsync(req.body);
-            //call and return controller
-            //@ts-ignore
-            return CtrlUser.edit(req.session.user.uid, data);
         }));
 
         /**
@@ -312,22 +291,6 @@ export default class Server {
             //return and call controller
             //@ts-ignore
             return CtrlUser.confirmRequest(req.session.user.uid, req.body.targetId);
-        }));
-
-        /**
-         * Remove Friend
-         * only by user
-         */
-        this.app.put("/user/deleteFriend", expressResponse(async (req: Request) => {
-            //joi schema
-            const schema = Joi.object({
-                targetId: Joi.string().required(), //id of target user
-            });
-            //validate joi schema
-            await schema.validateAsync(req.body);
-            //return and call controller
-            //@ts-ignore
-            return CtrlUser.unFriend(req.session.user.uid, req.body.targetId);
         }));
 
         /**
