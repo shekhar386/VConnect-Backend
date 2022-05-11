@@ -24,6 +24,26 @@ export default class CtrlUser {
     }
 
     /**
+     * edit user
+     * @param body
+     */
+    static async edit(uid, body: any): Promise<IUser> {
+        console.log(body);
+        return user.findOneAndUpdate(
+            {_id: uid},
+            {
+                name: body.name,
+                dob: body.dob,
+                country: body.country,
+                email: body.email,
+                profilePic: body.profilePic,
+                bio: body.bio,
+            },
+            {new: true}
+        )
+    }
+
+    /**
      * Authorize user
      * @param email
      * @param password
@@ -132,6 +152,24 @@ export default class CtrlUser {
         await user.findOneAndUpdate(
             {_id: targetUser},
             {$push: {friendList: new mongoose.Types.ObjectId(currUser)}},
+            {new: true}
+        )
+        return "Success";
+    }
+
+    /**
+     * Remove Friend
+     */
+    static async unFriend(currUser, targetUser): Promise<String> {
+        await user.findOneAndUpdate(
+            {_id: currUser},
+            {$pull: {friendList: new mongoose.Types.ObjectId(targetUser)}},
+            {new: true}
+        )
+
+        await user.findOneAndUpdate(
+            {_id: targetUser},
+            {$pull: {friendList: new mongoose.Types.ObjectId(currUser)}},
             {new: true}
         )
         return "Success";
