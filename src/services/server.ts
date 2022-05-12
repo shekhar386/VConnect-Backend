@@ -362,5 +362,21 @@ export default class Server {
             //@ts-ignore
             return CtrlUser.findUserRequestList(data.userIds);
         }));
+
+         /**
+         * Check for unique email and password
+         */
+          this.app.get("/user/checkUnique", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                email: Joi.string().email().required(),
+                userName: Joi.string().required()
+            });
+            //validate joi schema
+            const data = await schema.validateAsync(req.query);
+            //return and call controller
+            //@ts-ignore
+            return CtrlUser.uniqueCheck(data.email, data.userName);
+        }));
     }
 }

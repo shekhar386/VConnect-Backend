@@ -3,8 +3,9 @@
  */
 
 import Bcrypt from "../services/bcrypt";
-import user, {IUser} from "../models/user";
+import user, { IUser } from "../models/user";
 import mongoose from "mongoose";
+import e from "express";
 
 export default class CtrlUser {
     /**
@@ -37,19 +38,41 @@ export default class CtrlUser {
             const result = await Bcrypt.comparing(password, userData.password);
             // if password is correct or not
             // if correct, return the user
-            if (result){
-                await user.findOneAndUpdate({email: email},{disabled: false});
-                return {uid: userData._id, email: email};
+            if (result) {
+                await user.findOneAndUpdate({ email: email }, { disabled: false });
+                return { uid: userData._id, email: email };
             }
             // throw error
-            else{
+            else {
                 throw new Error("password doesn't match");
             }
         }
         // throw error
-        else{
+        else {
             throw new Error("user doesn't exists");
         }
+    }
+
+    /**
+     * Check if user unique
+     * @param email
+     * @param userName
+     */
+    static async uniqueCheck(email: string, userName: string): Promise<any> {
+        // fetch user from database
+        const user1 = await user.findOne({ email }).lean();
+
+        const user2 = await user.findOne({ name : userName }).lean();
+
+        // if users exists or not
+        if (user2) {
+            return { success: false, message: "UserName already taken" };
+        }
+        else if (user1) {
+            return { success: false, message: "Email already in use" };
+        }
+        else { return { success: true, message: "Values unique" } };
+
     }
 
     /**
@@ -62,8 +85,10 @@ export default class CtrlUser {
         // fetch user from database
         const userData = await user.findOneAndUpdate({
             //@ts-ignore
-            email: email},
-            {bio: bio, profilePic: profilePic
+            email: email
+        },
+            {
+                bio: bio, profilePic: profilePic
             }).lean();
         // if users exists or not
         return userData;
@@ -92,7 +117,7 @@ export default class CtrlUser {
      * for profile screen
      */
     static async findUserList(searchData): Promise<IUser[]> {
-        return user.find({name: {$regex: '^' + searchData + '.*', $options: 'i'}, disabled: false});
+        return user.find({ name: { $regex: '^' + searchData + '.*', $options: 'i' }, disabled: false });
     }
 
     /**
@@ -103,7 +128,7 @@ export default class CtrlUser {
     static async findUserRequestList(userIds): Promise<any> {
         let allUserData = [];
         for (const user1 of userIds) {
-            let userData = await user.find({_id: new mongoose.Types.ObjectId(user1)})
+            let userData = await user.find({ _id: new mongoose.Types.ObjectId(user1) })
             allUserData.push(userData[0]);
         }
         return allUserData;
@@ -114,48 +139,50 @@ export default class CtrlUser {
      */
     static async sendRequest(currUser, targetUser): Promise<IUser> {
         return user.findOneAndUpdate(
-            {_id: targetUser},
-            {$push: {friendRequest: new mongoose.Types.ObjectId(currUser)}},
-            {new: true}
-            )
+            { _id: targetUser },
+            { $push: { friendRequest: new mongoose.Types.ObjectId(currUser) } },
+            { new: true }
+        )
     }
 
     /**
      * Confirm Request
      */
     static async confirmRequest(currUser, targetUser): Promise<String> {
-        const curUserData= await user.findOneAndUpdate(
-            {_id: currUser},
-            {$push: {friendList: new mongoose.Types.ObjectId(targetUser)},
-                $pull: {friendRequest: new mongoose.Types.ObjectId(targetUser)}},
-            {new: true}
+        const curUserData = await user.findOneAndUpdate(
+            { _id: currUser },
+            {
+                $push: { friendList: new mongoose.Types.ObjectId(targetUser) },
+                $pull: { friendRequest: new mongoose.Types.ObjectId(targetUser) }
+            },
+            { new: true }
         )
 
         await user.findOneAndUpdate(
-            {_id: targetUser},
-            {$push: {friendList: new mongoose.Types.ObjectId(currUser)}},
-            {new: true}
+            { _id: targetUser },
+            { $push: { friendList: new mongoose.Types.ObjectId(currUser) } },
+            { new: true }
         )
 
-        await user.findOneAndUpdate({_id: targetUser}, {$push: {notification: {uName: curUserData.name, type: 4}}});
+        await user.findOneAndUpdate({ _id: targetUser }, { $push: { notification: { uName: curUserData.name, type: 4 } } });
         return "Success";
     }
 
-    
+
     /**
      * Unfriend
      */
-     static async unFriend(currUser, targetUser): Promise<String> {
+    static async unFriend(currUser, targetUser): Promise<String> {
         await user.findOneAndUpdate(
-            {_id: currUser},
-            {$pull: {friendList: new mongoose.Types.ObjectId(targetUser)}},
-            {new: true}
+            { _id: currUser },
+            { $pull: { friendList: new mongoose.Types.ObjectId(targetUser) } },
+            { new: true }
         )
 
         await user.findOneAndUpdate(
-            {_id: targetUser},
-            {$pull: {friendList: new mongoose.Types.ObjectId(currUser)}},
-            {new: true}
+            { _id: targetUser },
+            { $pull: { friendList: new mongoose.Types.ObjectId(currUser) } },
+            { new: true }
         )
         return "Success";
     }
