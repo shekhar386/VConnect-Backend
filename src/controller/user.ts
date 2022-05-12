@@ -38,6 +38,7 @@ export default class CtrlUser {
             // if password is correct or not
             // if correct, return the user
             if (result){
+                await user.findOneAndUpdate({email: email},{disabled: false});
                 return {uid: userData._id, email: email};
             }
             // throw error
@@ -65,6 +66,7 @@ export default class CtrlUser {
             {bio: bio, profilePic: profilePic
             }).lean();
         // if users exists or not
+        return userData;
 
     }
 
@@ -122,7 +124,7 @@ export default class CtrlUser {
      * Confirm Request
      */
     static async confirmRequest(currUser, targetUser): Promise<String> {
-        await user.findOneAndUpdate(
+        const curUserData= await user.findOneAndUpdate(
             {_id: currUser},
             {$push: {friendList: new mongoose.Types.ObjectId(targetUser)},
                 $pull: {friendRequest: new mongoose.Types.ObjectId(targetUser)}},
@@ -132,6 +134,27 @@ export default class CtrlUser {
         await user.findOneAndUpdate(
             {_id: targetUser},
             {$push: {friendList: new mongoose.Types.ObjectId(currUser)}},
+            {new: true}
+        )
+
+        await user.findOneAndUpdate({_id: targetUser}, {$push: {notification: {uName: curUserData.name, type: 4}}});
+        return "Success";
+    }
+
+    
+    /**
+     * Unfriend
+     */
+     static async unFriend(currUser, targetUser): Promise<String> {
+        await user.findOneAndUpdate(
+            {_id: currUser},
+            {$pull: {friendList: new mongoose.Types.ObjectId(targetUser)}},
+            {new: true}
+        )
+
+        await user.findOneAndUpdate(
+            {_id: targetUser},
+            {$pull: {friendList: new mongoose.Types.ObjectId(currUser)}},
             {new: true}
         )
         return "Success";

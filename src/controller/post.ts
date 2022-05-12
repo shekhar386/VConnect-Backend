@@ -87,6 +87,9 @@ export default class CtrlPost {
                                 as: "user",
                             }
                         },
+                        {
+                            $unwind: "$user"
+                        },
                     ]
                 }
             },
@@ -176,6 +179,27 @@ export default class CtrlPost {
                 $match: {
                     uid: new mongoose.Types.ObjectId(userData),
                 },
+            },
+            {
+                $lookup: {
+                    from: "posts",
+                    localField: "sharedPost",
+                    foreignField: "_id",
+                    as: "post",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "uid",
+                                foreignField: "_id",
+                                as: "user",
+                            }
+                        },
+                        {
+                            $unwind: "$user"
+                        },
+                    ]
+                }
             },
             {
                 $lookup: {

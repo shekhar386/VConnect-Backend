@@ -172,7 +172,7 @@ export default class Server {
         this.app.post("/post/share", expressResponse(async (req: Request) => {
             //joi schema
             const schema = Joi.object({
-                body: Joi.string().required(),
+                body: Joi.string().default(''),
                 picture: Joi.string().default(''),
                 public: Joi.boolean().default(false),
                 weight: Joi.string().default('normal'),
@@ -334,6 +334,20 @@ export default class Server {
             return CtrlUser.confirmRequest(req.session.user.uid, req.body.targetId);
         }));
 
+        /**
+         * Unfriend user
+         */
+         this.app.put("/user/deleteFriend", expressResponse(async (req: Request) => {
+            //joi schema
+            const schema = Joi.object({
+                targetId: Joi.string().required(), //id of target user
+            });
+            //validate joi schema
+            await schema.validateAsync(req.body);
+            //return and call controller
+            //@ts-ignore
+            return CtrlUser.unFriend(req.session.user.uid, req.body.targetId);
+        }));
         /**
          * Request User Data
          */

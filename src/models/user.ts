@@ -3,7 +3,7 @@
  */
 
 import { Schema, model } from "mongoose";
-import { generate } from "shortid";
+
 
 export interface IUser {
     name: string, //user name
@@ -50,7 +50,6 @@ const userSchema=new Schema({
     }],
     friendRequest:[{
         type:String,
-        unique: true,
     }],
     notification:[{
         type:Object,
